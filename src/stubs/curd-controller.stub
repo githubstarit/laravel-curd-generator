@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace DummyNamespace;
 
 use Illuminate\Http\Request;
-use App\Http\Requests;
+use {{modelName}};
+use DummyRootNamespaceHttp\Requests;
+use DummyRootNamespaceHttp\Controllers\Controller;
 
-class {{class}} extends Controller
+class DummyClass extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -24,7 +26,8 @@ class {{class}} extends Controller
      */
     public function create()
     {
-        //
+        $model = new \{{modelName}}();
+        return view('{{view}}.create',['model'=>$model]);
     }
 
     /**
@@ -46,7 +49,8 @@ class {{class}} extends Controller
      */
     public function show($id)
     {
-        //
+        $model = \{{modelName}}::findOrFail($id);
+        return view('{{view}}.show',['model'=>$model]);
     }
 
     /**
@@ -57,7 +61,8 @@ class {{class}} extends Controller
      */
     public function edit($id)
     {
-        //
+        $model = \{{modelName}}::findOrFail($id);
+        return view('{{view}}.show',['model'=>$model]);
     }
 
     /**

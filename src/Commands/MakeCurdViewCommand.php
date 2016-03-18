@@ -1,27 +1,30 @@
 <?php
 
-namespace Aiddroid\Generators;
+namespace Aiddroid\Generators\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Console\AppNamespaceDetectorTrait;
+use Illuminate\Support\Facades\Schema;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 
 class MakeCurdViewCommand extends Command
 {
     use AppNamespaceDetectorTrait;
 
     /**
-     * The name and signature of the console command.
+     * The console command name.
      *
      * @var string
      */
-    protected $signature = 'make:view:curd {--views : Only scaffold the authentication views}';
+    protected $name = 'make:view:curd';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Scaffold basic login and registration views and routes';
+    protected $description = 'generate curd views from database table';
 
     /**
      * The views that need to be exported.
@@ -30,15 +33,32 @@ class MakeCurdViewCommand extends Command
      */
     protected $views = [];
 
-    public function __construct()
+    protected function getArguments()
     {
-        parent::__construct();
-        $name = $this->parseName($this->getNameInput());
-        $this->views = [
-            'index-view.stub' => $name.'/index.blade.php',
-            'create-view.stub' => $name.'/create.blade.php',
-            'edit-view.stub' => $name.'/edit.blade.php',
-            'show-view.stub' => $name.'/show.blade.php',
+        return [
+            ['name',InputArgument::REQUIRED,'views name'],
+        ];
+    }
+
+    /**
+    * Get the name
+    *
+    * @return string
+    */
+    protected function getNameInput()
+    {
+        return $this->argument('name');
+    }
+
+    /**
+     * Get the console command options.
+     *
+     * @return array
+     */
+    protected function getOptions()
+    {
+        return [
+            ['table', null, InputOption::VALUE_OPTIONAL, 'The database table you want to curd'],
         ];
     }
 
@@ -49,6 +69,13 @@ class MakeCurdViewCommand extends Command
      */
     public function fire()
     {
+        $name = $this->getNameInput();
+        $this->views = [
+            'index-view.stub' => $name.'/index.blade.php',
+            'create-view.stub' => $name.'/create.blade.php',
+            'edit-view.stub' => $name.'/edit.blade.php',
+            'show-view.stub' => $name.'/show.blade.php',
+        ];
         $this->createDirectories();
 
         $this->exportViews();
@@ -63,7 +90,7 @@ class MakeCurdViewCommand extends Command
      */
     protected function createDirectories()
     {
-        $name = $this->parseName($this->getNameInput());
+        $name = $this->getNameInput();
         if (! is_dir(base_path('resources/views/layouts'))) {
             mkdir(base_path('resources/views/layouts'), 0755, true);
         }
@@ -80,7 +107,7 @@ class MakeCurdViewCommand extends Command
      */
     protected function exportViews()
     {
-        $name = $this->parseName($this->getNameInput());
+        $name = $this->getNameInput();
         $form = $this->createForm();
         file_put_contents(base_path('resources/views/'.$name.'/_form.blade.php'),$form);
 
@@ -89,25 +116,29 @@ class MakeCurdViewCommand extends Command
 
             $this->line('<info>Created View:</info> '.$path);
 
-            copy(__DIR__.'/../stubs/'.$key, $path);
+            $content = file_get_contents(__DIR__.'/../stubs/'.$key);
+            $content = str_replace('{{view}}',$name,$content);
+            file_put_contents($path, $content);
         }
     }
 
     protected function createForm(){
         $table = $this->option('table');
         $tableColumns = Schema::getColumnListing($table);
-        var_dump($tableColumns);die;
-        $form = '{!! Form::model($model) !!}'
+        $form = '{!! Form::model($model) !!}'.PHP_EOL;
         foreach($tableColumns as $column){
-            $form .= '<div class="form-group"> \n';
-            $form .= '{!! Form::label(\''.$column.'\') !!} \n';
-            $form .= '{!! Form::text(\''.$column.'\',null,['class'=>'form-control']) !!} \n';
-            $form .= '</div> \n';
+            if($column === 'id'){
+                continue;
+            }
+            $form .= '    <div class="form-group">'.PHP_EOL;
+            $form .= '        {!! Form::label(\''.$column.'\') !!}'.PHP_EOL;
+            $form .= '        {!! Form::text(\''.$column.'\',null,[\'class\'=>\'form-control\']) !!}'.PHP_EOL;
+            $form .= '    </div>'.PHP_EOL;
         }
-        $form .= '<div class="form-group"> \n';
-        $form .= '{!! Form::submit(\'save\',[\'class\'=>\'btn btn-primary form-control\']) !!} \n';
-        $form .= '</div> \n';
-        $form .= '{!! Form::close() !!} \n';
+        $form .= '    <div class="form-group">'.PHP_EOL;
+        $form .= '        {!! Form::submit(\'save\',[\'class\'=>\'btn btn-primary form-control\']) !!}'.PHP_EOL;
+        $form .= '    </div>'.PHP_EOL;
+        $form .= '{!! Form::close() !!}'.PHP_EOL;
         return $form;
     }
 

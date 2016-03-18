@@ -5,7 +5,7 @@ namespace Aiddroid\Generators\Commands;
 use Illuminate\Console\GeneratorCommand;
 use Symfony\Component\Console\Input\InputOption;
 
-class MakeCurdCommand extends GeneratorCommand
+class MakeCurdControllerCommand extends GeneratorCommand
 {
     /**
      * The console command name.
@@ -26,18 +26,7 @@ class MakeCurdCommand extends GeneratorCommand
      *
      * @var string
      */
-    protected $type = 'Curd';
-
-    /**
-     * Parse the name and format according to the root namespace.
-     *
-     * @param  string $name
-     * @return string
-     */
-    protected function parseName($name)
-    {
-        return ucwords(camel_case($name)) . 'Controller';
-    }
+    protected $type = 'Controller';
 
     /**
      * Get the stub file for the generator.
@@ -50,13 +39,44 @@ class MakeCurdCommand extends GeneratorCommand
     }
 
     /**
-     * Get the destination class path.
+     * Get the default namespace for the class.
      *
-     * @param  string $name
+     * @param  string  $rootNamespace
      * @return string
      */
-    protected function getPath($name)
+    protected function getDefaultNamespace($rootNamespace)
     {
-        return base_path() . '/app/Http/Controllers/' . str_replace('\\', '/', $name) . '.php';
+        return $rootNamespace.'\Http\Controllers';
+    }
+
+    /**
+     * Build the class with the given name.
+     *
+     * Remove the base controller import if we are already in base namespace.
+     *
+     * @param  string  $name
+     * @return string
+     */
+    protected function buildClass($name)
+    {
+        $namespace = $this->getNamespace($name);
+
+        $class = str_replace("use $namespace\Controller;\n", '', parent::buildClass($name));
+        $class = str_replace('{{modelName}}',$this->option('model'),$class);
+        return str_replace('{{view}}',$this->option('view'),$class);
+    }
+
+
+    /**
+     * Get the console command options.
+     *
+     * @return array
+     */
+    protected function getOptions()
+    {
+        return [
+            ['model', null, InputOption::VALUE_OPTIONAL, 'The model you want to curd.'],
+            ['view', null, InputOption::VALUE_OPTIONAL, 'The view you want to use.'],
+        ];
     }
 }
