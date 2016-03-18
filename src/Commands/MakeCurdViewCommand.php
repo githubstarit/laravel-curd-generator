@@ -58,7 +58,7 @@ class MakeCurdViewCommand extends Command
     protected function getOptions()
     {
         return [
-            ['table', null, InputOption::VALUE_OPTIONAL, 'The database table you want to curd'],
+            ['model', null, InputOption::VALUE_OPTIONAL, 'The database model you want to curd'],
         ];
     }
 
@@ -123,7 +123,8 @@ class MakeCurdViewCommand extends Command
     }
 
     protected function createForm(){
-        $table = $this->option('table');
+        $modelClass = $this->option('model');
+        $table = (new $modelClass())->table;
         $tableColumns = Schema::getColumnListing($table);
         $form = '{!! Form::model($model) !!}'.PHP_EOL;
         foreach($tableColumns as $column){

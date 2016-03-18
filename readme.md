@@ -41,5 +41,5 @@ php artisan make:controller:curd CommentController --model='App\Models\Comment' 
 Make views for CURD
 
 ```
-php artisan make:view:curd comment --table=comments
+php artisan make:view:curd comment --model='App\Models\Comment'
 ```
