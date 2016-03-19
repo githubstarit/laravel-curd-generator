@@ -59,6 +59,7 @@ class MakeCurdControllerCommand extends GeneratorCommand
      */
     protected function buildClass($name)
     {
+        $this->info('<info>Created Controller:</info> '.$name);
         $namespace = $this->getNamespace($name);
 
         $class = str_replace("use $namespace\Controller;\n", '', parent::buildClass($name));
